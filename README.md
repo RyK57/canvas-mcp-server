@@ -109,7 +109,7 @@ Every read tool takes `response_format: "markdown" | "json"`. Markdown is the de
 ## Examples
 
 **"What's due this week?"**
-→ `canvas_list_planner_items` with `start_date` and `end_date`. Spans every course in one call and reports submission state, so it also answers "what am I behind on".
+→ `canvas_list_planner_items` with `end_date` a week out. Spans every course in one call and reports submission state. It starts from today by default, so for "what am I behind on" pass an explicit earlier `start_date`.
 
 **"What are my grades?"**
 → `canvas_get_grades`. One call, every active course, current score and letter grade.
@@ -176,7 +176,7 @@ src/
 
 ```bash
 npm run build
-npm test            # 41 checks: MCP handshake, tools, pagination, formatting, errors (mocked API)
+npm test            # 43 checks: MCP handshake, tools, pagination, formatting, errors (mocked API)
 npm run test:http   # 19 checks: config validation, path-secret gating, method handling, origins
 ```
 
