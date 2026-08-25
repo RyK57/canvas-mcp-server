@@ -55,8 +55,9 @@ Returns:
   }
 
 Examples:
-  - "What's due this week?" -> start_date=today, end_date=today+7d
-  - "What am I behind on?" -> scan for submissions.missing === true
+  - "What's due this week?" -> end_date=today+7d, start_date left at its default
+  - "What am I behind on?" -> pass an explicit earlier start_date, e.g. 3 weeks back,
+    then scan for submissions.missing === true. Without it you only see today onward
   - "What's due in CS 61A?" -> course_ids=['course_1234']
   - Don't use when: you need an assignment's full instructions (use canvas_get_assignment)
 
@@ -73,9 +74,14 @@ Error Handling:
       },
     },
     withErrorHandling(async (params: z.infer<typeof listPlannerItemsSchema>) => {
+      // Canvas returns the entire planner history when start_date is omitted, so a
+      // bare "what's due" call comes back with years-old items first. Default to
+      // today; reaching into the past is an explicit choice the caller makes.
+      const startDate = params.start_date ?? new Date().toISOString().slice(0, 10);
+
       const { items, has_more } = await requestPage<PlannerItem>(config, "/planner/items", {
         query: {
-          start_date: params.start_date,
+          start_date: startDate,
           end_date: params.end_date,
           context_codes: params.course_ids,
           page: params.page,
@@ -88,8 +94,8 @@ Error Handling:
 
       if (items.length === 0) {
         return emptyResult(
-          "Nothing in the planner for that window. Widen the dates, or drop start_date to " +
-            "include items already past.",
+          `Nothing in the planner from ${startDate} onward. Pass an earlier start_date to ` +
+            "include work that is already past due.",
           structured,
         );
       }

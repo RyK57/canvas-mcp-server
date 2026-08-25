@@ -328,6 +328,15 @@ check("planner items render", planner.content[0].text.includes("Project 1") && p
 check("planner submissions:false survives", planner.content[0].text.includes("Midterm Review Session"), "boolean false not treated as object");
 check("planner submitted state rendered", planner.content[0].text.includes("submitted"));
 
+// Canvas returns the entire planner history when start_date is omitted, which
+// makes a bare "what's due" call surface years-old items first.
+const plannerReq = requestLog.filter((r) => r.path === "/api/v1/planner/items").at(-1);
+const today = new Date().toISOString().slice(0, 10);
+check("planner defaults start_date to today", plannerReq.params.get("start_date") === today, plannerReq.params.get("start_date"));
+await call("canvas_list_planner_items", { start_date: "2026-01-01" });
+const plannerReq2 = requestLog.filter((r) => r.path === "/api/v1/planner/items").at(-1);
+check("explicit planner start_date wins", plannerReq2.params.get("start_date") === "2026-01-01");
+
 // --- Context code normalisation ----------------------------------------------
 await call("canvas_list_announcements", { course_ids: ["1234"] });
 const annReq = requestLog.filter((r) => r.path === "/api/v1/announcements").at(-1);
